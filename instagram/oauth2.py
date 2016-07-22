@@ -103,7 +103,8 @@ class OAuth2AuthExchangeRequest(object):
         redirected_to = response['content-location']
         return redirected_to
 
-    def exchange_for_access_token(self, code=None, username=None, password=None, scope=None, user_id=None):
+    # Buggy! OAuth2AuthExchangeError You must provide a client_id
+    def exchange_for_access_token_hasan(self, code=None, username=None, password=None, scope=None, user_id=None):
         data = self._data_for_exchange(code, username, password, scope=scope, user_id=user_id)
         http_object = Http(disable_ssl_certificate_validation=True)
         url = self.api.access_token_url
@@ -111,6 +112,25 @@ class OAuth2AuthExchangeRequest(object):
         parsed_content = simplejson.loads(content.decode())
         if int(response['status']) != 200:
             raise OAuth2AuthExchangeError(parsed_content.get("error_message", ""))
+        return parsed_content['access_token'], parsed_content['user']
+
+    def exchange_for_access_token(self, code=None, username=None, password=None, scope=None, user_id=None):
+        url = self.api.access_token_url
+        data = {
+            "client_id": self.api.client_id,
+            "client_secret": self.api.client_secret,
+            "redirect_uri": self.api.redirect_uri,
+            "grant_type": "authorization_code",
+            "code": code
+        }
+
+        import requests
+        response = requests.post(url, data=data)
+        parsed_content = response.json()
+
+        if response.status_code != 200:
+            raise OAuth2AuthExchangeError(parsed_content["error_message"])
+
         return parsed_content['access_token'], parsed_content['user']
 
 
