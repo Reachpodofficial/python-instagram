@@ -113,7 +113,7 @@ class OAuth2AuthExchangeRequest(object):
         if int(response['status']) != 200:
             raise OAuth2AuthExchangeError(parsed_content.get("error_message", ""))
         return parsed_content['access_token'], parsed_content['user']
-
+ 
     def exchange_for_access_token(self, code=None, username=None, password=None, scope=None, user_id=None):
         url = self.api.access_token_url
         data = {
